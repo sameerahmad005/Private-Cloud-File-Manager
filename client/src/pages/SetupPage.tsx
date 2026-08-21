@@ -102,11 +102,7 @@ export const SetupPage: React.FC<SetupPageProps> = ({ onSetupComplete, onOpenGui
   };
 
   const handleOpenGuide = () => {
-    if (onOpenGuidePage) {
-      onOpenGuidePage();
-    } else {
-      window.open('/setup/google-oauth-guide', '_blank');
-    }
+    window.open('/setup/google-oauth-guide', '_blank', 'noopener,noreferrer');
   };
 
   const handleCreateAdmin = async (e: React.FormEvent) => {
