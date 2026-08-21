@@ -96,7 +96,9 @@ export const setupApi = {
   },
 
   async getOAuthUrl() {
-    const res = await api.get<ApiResponse<{ url: string; redirectUri: string }>>('/setup/oauth/url');
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const query = origin ? `?origin=${encodeURIComponent(origin)}` : '';
+    const res = await api.get<ApiResponse<{ url: string; redirectUri: string }>>(`/setup/oauth/url${query}`);
     return res.data;
   },
 

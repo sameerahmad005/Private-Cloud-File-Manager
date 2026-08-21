@@ -94,6 +94,23 @@ export async function saveOauthConfig(req: Request, res: Response) {
   });
 }
 
+function getEffectiveRedirectUri(req: Request): string {
+  const originQuery = typeof req.query.origin === 'string' ? req.query.origin : '';
+  if (originQuery && !originQuery.includes('localhost')) {
+    return `${originQuery.replace(/\/$/, '')}/api/setup/oauth/callback`;
+  }
+
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  const dynamicOrigin = `${protocol}://${host}`;
+
+  const effectiveAppUrl = env.APP_URL && !env.APP_URL.includes('localhost')
+    ? env.APP_URL
+    : (host ? dynamicOrigin : (env.APP_URL || 'http://localhost:5000'));
+
+  return `${effectiveAppUrl.replace(/\/$/, '')}/api/setup/oauth/callback`;
+}
+
 export async function getOAuthUrl(req: Request, res: Response) {
   if (isInitialized()) {
     return res.status(403).json({ success: false, error: 'SETUP_ALREADY_COMPLETED: First-run setup is locked.' });
@@ -109,11 +126,12 @@ export async function getOAuthUrl(req: Request, res: Response) {
     });
   }
 
-  const redirectUri = `${env.APP_URL}/api/setup/oauth/callback`;
+  const redirectUri = getEffectiveRedirectUri(req);
   const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 
   const state = crypto.randomBytes(16).toString('hex');
   req.session.oauthState = state;
+  req.session.oauthRedirectUri = redirectUri;
 
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -136,7 +154,7 @@ export async function handleOAuthCallback(req: Request, res: Response) {
     return res.status(400).send('Missing authorization code.');
   }
 
-  const redirectUri = `${env.APP_URL}/api/setup/oauth/callback`;
+  const redirectUri = req.session?.oauthRedirectUri || getEffectiveRedirectUri(req);
   const oauth2Client = new google.auth.OAuth2(
     env.GOOGLE_CLIENT_ID,
     env.GOOGLE_CLIENT_SECRET,
@@ -153,6 +171,11 @@ export async function handleOAuthCallback(req: Request, res: Response) {
       console.warn('Google OAuth returned access token without refresh token.');
     }
 
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    const dynamicOrigin = `${protocol}://${host}`;
+    const targetOrigin = env.APP_URL && !env.APP_URL.includes('localhost') ? env.APP_URL : dynamicOrigin;
+
     return res.send(`
       <!DOCTYPE html>
       <html>
@@ -167,12 +190,13 @@ export async function handleOAuthCallback(req: Request, res: Response) {
             <button onclick="window.close()" style="margin-top: 15px; padding: 8px 18px; background: #334155; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600;">Close Window</button>
           </div>
           <script>
-            const targetOrigin = "${env.APP_URL}";
+            const targetOrigin = "${targetOrigin}";
             if (window.opener) {
               try {
+                window.opener.postMessage({ type: 'GOOGLE_OAUTH_SUCCESS' }, targetOrigin);
                 window.opener.postMessage({ type: 'google-oauth-success' }, targetOrigin);
               } catch (e) {
-                window.opener.postMessage({ type: 'google-oauth-success' }, '*');
+                window.opener.postMessage({ type: 'GOOGLE_OAUTH_SUCCESS' }, '*');
               }
               setTimeout(() => {
                 try { window.close(); } catch(e) {}

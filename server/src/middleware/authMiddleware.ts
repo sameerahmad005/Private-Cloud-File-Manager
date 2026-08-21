@@ -10,6 +10,7 @@ declare module 'express-session' {
     csrfToken: string;
     lastActivity: number;
     oauthState?: string;
+    oauthRedirectUri?: string;
   }
 }
 
