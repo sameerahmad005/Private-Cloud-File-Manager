@@ -265,39 +265,101 @@ Private-Cloud-File-Manager/
 
 ---
 
-## Development
+---
 
-### Running Development Servers
-To run the Express backend and React frontend concurrently in development mode:
+## Local Installation & Setup
 
-```bash
-# Terminal 1: Backend Express server (watch mode on port 5000)
-npm run dev:server
+### Prerequisites
+- **Node.js**: v18.x, v20.x, or v22.x
+- **npm**: v9.x or higher
+- **Google Cloud Console Account**: For Google Drive API credentials
 
-# Terminal 2: Frontend Vite dev server (on port 5173)
-npm run dev:client
-```
+### Step-by-Step Local Setup
 
-### Running Automated Tests
-```bash
-npm test
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/sameerahmad005/Private-Cloud-File-Manager.git
+   cd Private-Cloud-File-Manager
+   ```
 
-### Building for Production
-```bash
-npm run build
-```
+2. **Install all dependencies (Root, Client, and Server):**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables:**
+   Create a `.env` file in the root directory (copy from `.env.example`):
+   ```bash
+   cp .env.example .env
+   ```
+   Configure the following minimum variables:
+   ```env
+   APP_ENV=development
+   PORT=5000
+   APP_URL=http://localhost:5000
+   SESSION_SECRET=your_super_secret_session_key_here
+   AUTH_ENABLED=true
+   STORAGE_PROVIDER=google_drive
+   ```
+
+4. **Start Development Servers:**
+   ```bash
+   # Run both server & client concurrently:
+   npm run dev:server   # Express Backend on http://localhost:5000
+   npm run dev:client   # Vite Frontend on http://localhost:5173
+   ```
+
+5. **First-Time Setup Wizard:**
+   - Open your browser at `http://localhost:5173/setup` (or `http://localhost:5000/setup`).
+   - Create your administrator login.
+   - Enter your Google OAuth Client ID and Secret (or follow the built-in guide at `/setup/google-oauth-guide`).
+   - The Authorized Redirect URI will automatically display `http://localhost:5000/api/setup/oauth/callback`.
+   - Authorize your Google Drive and select or create your storage root folder.
 
 ---
 
 ## Production Deployment
 
-### Vercel Serverless Deployment
-1. Import the repository into **Vercel**.
-2. Keep the **Root Directory** as `./` (repository root).
-3. Vercel will automatically detect `vercel.json` (build command `npm run build`, output directory `client/dist`, and API/SPA rewrites).
-4. Configure required Environment Variables in Vercel Project Settings (`APP_URL`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`, `GOOGLE_DRIVE_ROOT_FOLDER_ID`).
-5. Add `https://<your-vercel-domain>/api/setup/oauth/callback` to **Authorized redirect URIs** in Google Cloud Console.
+### Vercel Serverless Deployment (One-Click / Git Integration)
+
+Deploy both the React frontend and the Express Serverless API together under a single Vercel project:
+
+1. **Import Project into Vercel:**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **Add New > Project**.
+   - Select your GitHub repository: `sameerahmad005/Private-Cloud-File-Manager`.
+
+2. **Configure Build & Project Settings:**
+   - **Framework Preset**: Select `Other` (do not select Vite alone, so Vercel builds both the frontend and the `api/` serverless functions).
+   - **Root Directory**: `./` (keep at repository root, do not set to `client/`).
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `client/dist`
+   - **Install Command**: `npm install`
+
+3. **Set Environment Variables in Vercel:**
+   In **Settings > Environment Variables**, add:
+   | Variable | Example / Description |
+   | :--- | :--- |
+   | `APP_ENV` | `production` |
+   | `APP_URL` | `https://<your-vercel-project>.vercel.app` |
+   | `SESSION_SECRET` | Generate a 32+ character random string |
+   | `AUTH_ENABLED` | `true` |
+   | `STORAGE_PROVIDER` | `google_drive` |
+   | `GOOGLE_CLIENT_ID` | `xxxx.apps.googleusercontent.com` |
+   | `GOOGLE_CLIENT_SECRET` | `GOCSPX-xxxx` |
+   | `GOOGLE_REFRESH_TOKEN` | Generated during OAuth authorization |
+   | `GOOGLE_DRIVE_ROOT_FOLDER_ID` | Google Drive folder ID or `root` |
+
+4. **Configure Google Cloud Console Authorized Redirect URI:**
+   - Open [Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials).
+   - Under your OAuth 2.0 Web Client ID, add the following to **Authorized redirect URIs**:
+     ```
+     https://<your-vercel-project>.vercel.app/api/setup/oauth/callback
+     ```
+   *(Note: The setup wizard dynamically displays your exact current domain's callback URL).*
+
+5. **Deploy & Open App:**
+   - Click **Deploy**.
+   - Open `https://<your-vercel-project>.vercel.app/`.
 
 ### Standard Node.js Server
 1. Clone repository and run `npm install`.

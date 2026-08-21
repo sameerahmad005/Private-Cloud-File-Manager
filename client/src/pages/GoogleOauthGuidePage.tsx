@@ -35,6 +35,11 @@ export const GoogleOauthGuidePage: React.FC<GoogleOauthGuidePageProps> = ({ onBa
 
   const fetchRedirectUri = async () => {
     try {
+      const isBrowserLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isBrowserLocalhost) {
+        setRedirectUri(`${window.location.origin}/api/setup/oauth/callback`);
+        return;
+      }
       const res = await setupApi.getStatus();
       if (res.data?.redirectUri) {
         setRedirectUri(res.data.redirectUri);

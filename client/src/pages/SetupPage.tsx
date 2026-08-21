@@ -81,10 +81,14 @@ export const SetupPage: React.FC<SetupPageProps> = ({ onSetupComplete, onOpenGui
         setHasRefreshToken(res.data.hasRefreshToken);
         setIsDriveConnected(res.data.isDriveConnected);
         setProviderState(res.data.providerState);
-        setRedirectUri(res.data.redirectUri || `${window.location.origin}/api/setup/oauth/callback`);
+        const isBrowserLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const effectiveRedirectUri = (!isBrowserLocalhost || !res.data.redirectUri)
+          ? `${window.location.origin}/api/setup/oauth/callback`
+          : res.data.redirectUri;
+        setRedirectUri(effectiveRedirectUri);
       }
     } catch {
-      // Ignored
+      setRedirectUri(`${window.location.origin}/api/setup/oauth/callback`);
     } finally {
       setLoading(false);
     }

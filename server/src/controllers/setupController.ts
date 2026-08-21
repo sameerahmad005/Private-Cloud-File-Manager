@@ -12,7 +12,12 @@ export async function getSetupStatus(req: Request, res: Response) {
   const hasRefreshToken = Boolean(env.GOOGLE_REFRESH_TOKEN);
   const isDriveConnected = googleDriveService.isLiveDrive;
   const providerState = googleDriveService.providerState;
-  const redirectUri = `${env.APP_URL}/api/setup/oauth/callback`;
+  
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  const dynamicOrigin = `${protocol}://${host}`;
+  const effectiveAppUrl = env.APP_URL && !env.APP_URL.includes('localhost') ? env.APP_URL : (dynamicOrigin.includes('localhost') && env.APP_URL ? env.APP_URL : dynamicOrigin);
+  const redirectUri = `${effectiveAppUrl}/api/setup/oauth/callback`;
   const rootFolderId = env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
 
   return res.json({
