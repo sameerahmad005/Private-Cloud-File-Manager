@@ -51,8 +51,37 @@ function saveStore() {
   }
 }
 
+import bcrypt from 'bcryptjs';
+import { env } from '../config/env.js';
+
 export async function initDatabase(): Promise<void> {
   loadStore();
+
+  const envAdminUser = process.env.ADMIN_USERNAME || 'admin';
+  const envAdminPass = process.env.ADMIN_PASSWORD;
+  
+  if (envAdminPass) {
+    const existing = store.users.find((u) => u.username === envAdminUser);
+    if (!existing) {
+      const hash = await bcrypt.hash(envAdminPass, 10);
+      store.users.push({
+        id: `user_env_admin`,
+        username: envAdminUser,
+        password_hash: hash,
+        role: 'admin',
+        created_at: new Date().toISOString(),
+      });
+      store.app_settings['is_initialized'] = 'true';
+      saveStore();
+    }
+  }
+
+  // If Google Drive OAuth is pre-configured via Environment Variables, preserve initialized status
+  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN && store.users.length > 0) {
+    store.app_settings['is_initialized'] = 'true';
+    saveStore();
+  }
+
   console.log('Pure JS Metadata Database initialized successfully at:', jsonDbPath);
 }
 
@@ -229,6 +258,13 @@ export function getSettingsMap(): Record<string, string> {
 
 export function isInitialized(): boolean {
   loadStore();
+  const hasEnvCredentials = Boolean(
+    env.GOOGLE_CLIENT_ID &&
+    env.GOOGLE_CLIENT_SECRET &&
+    env.GOOGLE_REFRESH_TOKEN &&
+    (store.users.length > 0 || (process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD))
+  );
+  if (hasEnvCredentials) return true;
   return store.app_settings['is_initialized'] === 'true' && store.users.length > 0;
 }
 

@@ -210,6 +210,8 @@ Deploy both the React frontend and Express serverless functions under a single u
    | `APP_URL` | `https://<your-project>.vercel.app` |
    | `SESSION_SECRET` | 32+ character random string |
    | `AUTH_ENABLED` | `true` |
+   | `ADMIN_USERNAME` | Administrator username (e.g. `admin`) |
+   | `ADMIN_PASSWORD` | Strong password for admin login |
    | `STORAGE_PROVIDER` | `google_drive` |
    | `GOOGLE_CLIENT_ID` | Your Google OAuth Web Client ID |
    | `GOOGLE_CLIENT_SECRET` | Your Google OAuth Client Secret |
