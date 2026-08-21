@@ -1,150 +1,354 @@
 # Private Cloud File Manager
 
-A self-hosted personal cloud storage and file management web application backed by Google Drive API v3.
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![Google Drive API](https://img.shields.io/badge/Google_Drive_API-4285F4?style=flat-square&logo=googledrive&logoColor=white)](https://developers.google.com/drive)
 
-Made by **Sameer** &middot; GitHub: [https://github.com/sameerahmad005/Private-Cloud-File-Manager](https://github.com/sameerahmad005/Private-Cloud-File-Manager)
+A self-hosted web application for managing files and folders stored in Google Drive while retaining control over your application deployment, user authentication, and storage configuration.
 
-Private Cloud File Manager allows you to run your own web-based file management dashboard on your server while leveraging your own Google Drive storage for file persistence.
+---
+
+## Preview
+
+> Screenshots and demo materials will be added soon.
+
+---
+
+## Why This Project
+
+Standard web storage interfaces often require hosting files directly on server local disks or using third-party software as a service. **Private Cloud File Manager** separates application deployment from file persistence.
+
+By connecting your own Google Drive account via OAuth 2.0, you can run a private, responsive web dashboard on your own server (or local machine) while leveraging Google Drive infrastructure for backend file storage.
+
+### Key Advantages
+- **Self-Hosted Control:** Host the frontend and Express backend on your own server or web host.
+- **Your Own Credentials:** Bring your own Google Cloud OAuth 2.0 Client credentials—no shared third-party API gateways.
+- **Root Folder Boundary:** Restrict application file access to a specific designated folder in Google Drive.
+- **No Direct Storage Burden:** Files are streamed directly between your browser, the backend server, and Google Drive without relying on server disk storage.
 
 ---
 
 ## Features
 
-- 📁 **File & Folder Management:** Upload, download, rename, move, and soft-delete files and folders.
-- 👁️ **Inline Media Previews:** Stream PDFs, images, videos, and text files directly inside the browser.
-- 📝 **Markdown Notes Editor:** Create, edit, and organize markdown notes directly stored in your Google Drive.
-- ⭐ **Favorites & Recents:** Quick access to starred items and recently accessed files.
-- 🔍 **Full-Text Search:** Instantly search across files and folders in your storage workspace.
-- 🛡️ **Strict Root Hierarchy Boundary:** Enforces server-side boundary checks so operations cannot access files outside your chosen root folder.
-- 🔒 **Security & Privacy:** Server-side sessions, anti-CSRF token protection, bcrypt password hashing, IP brute-force lockout protection, and security headers (Helmet).
-- 🚀 **First-Run Setup Wizard:** Interactive setup flow (`/setup`) to create admin credentials, configure Google OAuth, and select or create your storage root folder.
+- **Google Drive Storage Management:** Upload, download, rename, move, and soft-delete files and folders.
+- **Inline File Previews:** View PDFs, images, videos, and plain text files directly within the web app.
+- **Markdown Notes Editor:** Create, edit, and organize `.md` text notes stored directly in your Google Drive.
+- **Favorites & Recent Views:** Star important items and access recently modified files.
+- **Workspace Search:** Search files and folders across your storage directory.
+- **Layout & Sorting:** Switch between Grid and List views with multi-field sorting (name, date, size).
+- **Keyboard Shortcuts:** Built-in productivity shortcuts (`Ctrl+K` search, `Ctrl+A` select all, `Delete`, `Enter`, `Escape`).
+- **Server-Side Root Boundary Enforcement:** Server validates folder hierarchies to ensure operations cannot access files outside your designated root folder.
+- **Administrator Security:** Password hashing via bcrypt, rate limiting, IP brute-force protection, HTTP-only session cookies, and security headers via Helmet.
+- **First-Run Setup Wizard:** Interactive step-by-step setup at `/setup` to initialize admin credentials, configure Google OAuth, and select or create a root storage folder.
 
 ---
 
-## System Architecture
+## Technology Stack
 
-```
-                                +-----------------------------------+
-                                |   Client Single Page App (React)  |
-                                +-----------------------------------+
-                                                  |
-                                                  | REST API Requests (Axios + CSRF Header)
-                                                  v
-                                +-----------------------------------+
-                                |    Express REST API Backend       |
-                                |  (Session, Auth, Rate Limiter)    |
-                                +-----------------------------------+
-                                     /                         \
-                                    /                           \
-                                   v                             v
-            +----------------------------------+     +-------------------------------+
-            | Google Drive Service (API v3)    |     | Local App Metadata Database   |
-            | (OAuth2 Auth, Boundary Check)    |     | (JSON store: Users, Settings) |
-            +----------------------------------+     +-------------------------------+
-                           |
-                           v
-            +----------------------------------+
-            |      User's Google Drive         |
-            |   (Configured Root Folder)       |
-            +----------------------------------+
-```
+### Frontend
+- **React 18:** Single Page Application interface.
+- **TypeScript 5:** Type-safe components and state management.
+- **Vite 6:** Fast frontend build tool and dev server.
+- **Tailwind CSS 3:** Styling and design system.
+- **Lucide React:** Icons.
+- **Marked:** Markdown parser for the Notes editor.
+- **Axios:** HTTP client for REST API communication.
+
+### Backend
+- **Node.js:** JavaScript runtime.
+- **Express 4:** REST API server.
+- **TypeScript 5:** Server-side application logic.
+- **Google APIs Client (`googleapis` v144):** Official SDK for Google Drive API v3.
+- **Multer:** Multipart file upload handling.
+- **BcryptJS:** Secure password hashing.
+- **Express Session & Session File Store:** Server-side session management.
+- **Helmet:** Security header middleware.
+- **Express Rate Limit:** Request rate limiting protection.
+
+### Storage & Integration
+- **Google Drive API v3:** Primary file storage backend.
+- **OAuth 2.0:** User authorization code flow.
+- **JSON Metadata Store:** Lightweight local JSON store (`server/data/app_metadata.json`) for application settings and administrator metadata.
 
 ---
 
-## Requirements
+## Architecture
 
+```mermaid
+flowchart TD
+    A[Browser Client / React SPA] -->|REST API Requests + Anti-CSRF| B[Express API Backend]
+    B -->|Auth & Rate Limit Middleware| C[Google Drive Service]
+    B -->|Local Settings & Sessions| D[Local Metadata Store]
+    C -->|Google Drive API v3| E[User's Google Drive Account]
+    E -->|Scoped Root Folder| F[Designated Storage Directory]
+```
+
+### Data Separation Model
+- **Application Metadata:** Administrator account credentials, application configuration, session data, and note metadata are stored in the local server metadata database.
+- **File Contents & Directory Structure:** All uploaded files, folders, and markdown note text contents are stored directly inside your Google Drive account under the configured root folder.
+
+---
+
+## Security Model
+
+### Server-Side Root Boundary Enforcement
+When Private Cloud File Manager is configured with a Google Drive Root Folder ID, the backend enforces server-side boundary checks (`validateRootBoundary`):
+- Every file or folder operation (list, upload, rename, move, delete, stream) checks parent chain references.
+- Access is granted only if the target file or folder resides within the designated root folder hierarchy.
+- Direct file ID manipulation attempts for files outside the root boundary are denied at the API controller layer.
+
+---
+
+## Authentication & Session Security
+
+- **Administrator Credentials:** Stored securely using bcrypt password hashing.
+- **Session Protection:** Session state is managed server-side using HTTP-only, `SameSite=Lax` session cookies with auto-generated 32-byte secret keys.
+- **Inactivity Timeout:** Configurable session expiration (`SESSION_TIMEOUT`, default 60 minutes).
+- **Anti-CSRF Controls:** Anti-CSRF token header validation on state-modifying REST endpoints.
+- **Brute-Force Protection:** Automatically locks out client IP addresses after 5 consecutive failed login attempts.
+- **One-Time Setup Lock:** Once first-run setup is completed, the `/setup` wizard route is permanently disabled.
+
+---
+
+## Google OAuth Setup
+
+To connect Private Cloud File Manager to your Google Drive, you need your own Google Cloud OAuth 2.0 credentials:
+
+1. Log in to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project (e.g., `Private Cloud Storage`).
+3. Navigate to **APIs & Services > Library**, search for **Google Drive API**, and click **Enable**.
+4. Configure the **OAuth Consent Screen** (User Type: *External* or *Internal*).
+5. Navigate to **APIs & Services > Credentials** and click **Create Credentials > OAuth client ID**.
+6. Select **Web application** as the Application Type.
+7. Under **Authorized redirect URIs**, add your application callback URL:
+   - For local development: `http://localhost:5000/api/setup/oauth/callback`
+   - For production deployment: `https://your-domain.com/api/setup/oauth/callback`
+8. Copy your **Client ID** and **Client Secret**.
+9. Enter these credentials during the first-run `/setup` wizard or configure them in your server environment.
+
+*(An interactive guide is also built into the application at `/setup/google-oauth-guide`).*
+
+---
+
+## Installation
+
+### Prerequisites
 - **Node.js:** v18.0.0 or higher
 - **npm:** v9.0.0 or higher
-- **Google Account & Google Cloud Console Project** with Google Drive API v3 enabled.
-
----
-
-## Installation & First-Run Setup
 
 ### 1. Clone the Repository
-
 ```bash
 git clone https://github.com/sameerahmad005/Private-Cloud-File-Manager.git
 cd Private-Cloud-File-Manager
 ```
 
-### 2. Install Dependencies & Build
-
+### 2. Install Dependencies
 ```bash
 # Install root dependencies
 npm install
+```
 
-# Build client and server
+### 3. Build Client & Server
+```bash
 npm run build
 ```
 
-### 3. Configure Environment File
+---
 
-Copy `.env.example` to `.env`:
+## First-Run Setup
 
-```bash
-cp .env.example .env
-```
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-Edit `.env` if you need custom port or session settings:
+2. Start the production server:
+   ```bash
+   npm start
+   ```
 
-```env
-APP_ENV=production
-APP_URL=http://localhost:5000
-PORT=5000
-AUTH_ENABLED=true
-SESSION_SECRET=your_32_character_random_session_secret
-```
+3. Open your browser and navigate to:
+   ```
+   http://localhost:5000/setup
+   ```
 
-### 4. Google Cloud Setup (OAuth Credentials)
+4. Complete the 6-step setup wizard:
+   * **Step 1 — Welcome:** Architecture overview and environment check.
+   * **Step 2 — Admin Account:** Create your administrator username and password.
+   * **Step 3 — OAuth Credentials:** Enter your Google Client ID and Client Secret.
+   * **Step 4 — Connect Google Account:** Authorize Google Drive access via OAuth 2.0.
+   * **Step 5 — Root Folder:** Select an existing folder or create a new dedicated folder (e.g., `Private Cloud`).
+   * **Step 6 — Review & Finish:** Review parameters and finalize setup.
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Create a new project (e.g. `My Cloud Storage`).
-3. Enable the **Google Drive API** in *APIs & Services > Library*.
-4. Configure the **OAuth Consent Screen** (*External* or *Internal*).
-5. Create credentials under *APIs & Services > Credentials*:
-   - Type: **Web application**
-   - Authorized redirect URIs: `http://localhost:5000/api/setup/oauth/callback` (or `https://your-domain.com/api/setup/oauth/callback`)
-6. Copy your **Client ID** and **Client Secret**.
-
-### 5. Launch Application & Run Setup Wizard
-
-Start the application:
-
-```bash
-npm start
-```
-
-Open your browser and navigate to:
-
-```
-http://localhost:5000/setup
-```
-
-Follow the 6-step setup wizard:
-1. **Welcome:** System architecture and prerequisites check.
-2. **Administrator Account:** Create your admin username and secure password (hashed via bcrypt).
-3. **OAuth Client Credentials:** Enter your own Google Client ID & Client Secret (or view the in-app setup guide at `/setup/google-oauth-guide`).
-4. **Connect Google Account:** Authorize Google Drive storage access.
-5. **Root Storage Folder:** Choose an existing Google Drive folder or create a new dedicated folder (e.g., `Private Cloud`).
-6. **Review & Complete:** Confirm setup parameters and complete first-run installation.
-
-Once setup is finalized, the `/setup` route is permanently locked, and you will be redirected to log in.
+Once setup is complete, the application locks `/setup` and redirects to the login screen.
 
 ---
 
-## NPM Scripts
+## Environment Variables
 
-- `npm run dev:server` — Run Express backend in watch mode (Development).
-- `npm run dev:client` — Run Vite React frontend in dev mode.
-- `npm run build` — Compile server TypeScript and bundle client frontend.
-- `npm start` — Start production server.
-- `npm test` — Run server automated unit tests.
+Configure application parameters in `.env`:
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `APP_ENV` | Optional | `development` | Environment mode (`development` / `production`). |
+| `APP_URL` | Optional | `http://localhost:5000` | Public base URL of your application. |
+| `PORT` | Optional | `5000` | HTTP port for the backend server. |
+| `AUTH_ENABLED` | Optional | `true` | Enable or disable administrator authentication. |
+| `SESSION_SECRET` | Recommended | Auto-generated | Secret key for encrypting server session cookies. |
+| `STORAGE_PROVIDER` | Optional | `google_drive` | Storage engine (`google_drive` or `virtual` for testing). |
+| `GOOGLE_CLIENT_ID` | Required* | Empty | Google OAuth 2.0 Client ID (or configured via `/setup`). |
+| `GOOGLE_CLIENT_SECRET` | Required* | Empty | Google OAuth 2.0 Client Secret (or configured via `/setup`). |
+| `GOOGLE_REFRESH_TOKEN` | Required* | Empty | Google OAuth 2.0 Refresh Token (generated during setup). |
+| `MAX_UPLOAD_SIZE` | Optional | `52428800` | Maximum file upload size in bytes (default: 50MB). |
+| `SESSION_TIMEOUT` | Optional | `60` | Session inactivity timeout in minutes. |
+| `RATE_LIMIT` | Optional | `100` | Maximum requests per 15 minutes per IP address. |
 
 ---
 
-## Security Considerations
+## Keyboard Shortcuts
 
-- **Server-Side Token Storage:** Refresh tokens and client secrets are stored exclusively server-side in your app database/environment and are never sent to the browser.
-- **Root Boundary Protection:** Server verifies parent pointers to ensure no requested file ID escapes the configured root folder.
-- **Session Security:** Cookies use HTTP-only, SameSite lax, and production secure flags with auto-generated session secrets.
+Private Cloud File Manager includes a global keyboard shortcut system:
+
+| Shortcut | Context | Action |
+|---|---|---|
+| `Ctrl + K` / `⌘ + K` | Global | Focus global search input and select query text. |
+| `Ctrl + A` / `⌘ + A` | Explorer | Select all visible files and folders in active folder view. |
+| `Ctrl + Shift + A` / `⌘ + Shift + A` | Explorer | Deselect all files and folders. |
+| `Delete` | Explorer | Open deletion modal for currently selected item(s). |
+| `Enter` | Explorer | Open selected file preview or navigate into selected folder. |
+| `Escape` | Global | Close search dropdowns, right-click menus, and modals. |
+
+*Note: `Ctrl+A` is scoped exclusively to the file manager view and does not interfere with standard text selection in inputs, textareas, or the Markdown notes editor.*
+
+---
+
+## Project Structure
+
+```
+Private-Cloud-File-Manager/
+├── client/                     # Frontend React + TypeScript application
+│   ├── src/
+│   │   ├── components/         # Reusable UI components & modals
+│   │   ├── context/            # React context providers (Auth, Theme)
+│   │   ├── hooks/              # Custom hooks (useKeyboardShortcuts)
+│   │   ├── pages/              # Page views (Drive, Notes, Settings, Setup)
+│   │   └── services/           # Axios REST API client
+│   ├── package.json
+│   └── vite.config.ts
+├── server/                     # Backend Express + TypeScript API server
+│   ├── src/
+│   │   ├── config/             # Environment configuration (env.ts)
+│   │   ├── controllers/        # REST API route controllers
+│   │   ├── database/           # Local JSON metadata database (db.ts)
+│   │   ├── middleware/         # Auth, Rate limiting, and Security headers
+│   │   ├── scripts/            # CLI token generation helper (getOAuthToken.ts)
+│   │   ├── services/           # Google Drive API v3 integration service
+│   │   └── index.ts            # Main Express application entry point
+│   ├── package.json
+│   └── tsconfig.json
+├── shared/                     # Shared TypeScript types & interfaces
+├── app.js                      # Universal cPanel / Phusion Passenger entry script
+├── .env.example                # Template environment file
+├── package.json                # Root package configuration
+└── README.md
+```
+
+---
+
+## Development
+
+### Running Development Servers
+To run the Express backend and React frontend concurrently in development mode:
+
+```bash
+# Terminal 1: Backend Express server (watch mode on port 5000)
+npm run dev:server
+
+# Terminal 2: Frontend Vite dev server (on port 5173)
+npm run dev:client
+```
+
+### Running Automated Tests
+```bash
+npm test
+```
+
+### Building for Production
+```bash
+npm run build
+```
+
+---
+
+## Production Deployment
+
+### Standard Node.js Server
+1. Clone repository and run `npm install`.
+2. Run `npm run build` to compile client and server assets.
+3. Configure `.env` with production `APP_URL`, `SESSION_SECRET`, and port.
+4. Run `npm start` (or use a process manager like PM2).
+
+### Web Hosting / cPanel (Phusion Passenger)
+The repository includes an `app.js` entry script designed for cPanel Node.js selector / Phusion Passenger environments. Point Passenger's startup file to `app.js`.
+
+---
+
+## Configuration Security
+
+- **Never commit `.env`** to Git repositories.
+- Keep `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`, and `SESSION_SECRET` confidential.
+- Use `.env.example` as a template for environment variable configuration.
+- Server-side sessions and credentials must remain restricted to your backend environment.
+
+---
+
+## Troubleshooting
+
+- **Google Drive Not Connected:** Ensure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REFRESH_TOKEN` are populated or re-run setup at `/setup`.
+- **Invalid Redirect URI:** Verify that `http://localhost:5000/api/setup/oauth/callback` (or your domain callback) exactly matches the **Authorized redirect URIs** in Google Cloud Console.
+- **Permission Denied Errors:** Ensure your Google Account has access permissions to the configured root folder.
+- **Port 5000 In Use:** Change `PORT=5000` in `.env` to an open port (e.g. `PORT=5001`).
+
+---
+
+## Roadmap
+
+- Additional automated test coverage across storage service edge cases.
+- Production deployment guides for Docker and cloud hosting platforms.
+- Extended administrative policy management controls.
+
+---
+
+## Contributing
+
+Contributions are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/your-feature`).
+3. Make your changes and verify with `npm run build` and `npm test`.
+4. Commit your changes with clear messages.
+5. Push to your branch and open a Pull Request.
+
+---
+
+## Security Reporting
+
+If you discover a potential security vulnerability in Private Cloud File Manager, please report it responsibly by contacting the repository maintainer through GitHub or private channels. Do not post unpatched security vulnerabilities in public issue trackers.
+
+---
+
+## License
+
+License information will be added separately.
+
+---
+
+## Author & Attribution
+
+Made by **Sameer**
+
+GitHub: [https://github.com/sameerahmad005/Private-Cloud-File-Manager](https://github.com/sameerahmad005/Private-Cloud-File-Manager)
