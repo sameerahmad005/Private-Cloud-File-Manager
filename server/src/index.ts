@@ -54,7 +54,8 @@ app.use(cookieParser());
 import FileStoreFactory from 'session-file-store';
 
 const FileStore = FileStoreFactory(session);
-const sessionsDir = path.resolve(__dirname, '../data/sessions');
+const isVercel = !!process.env.VERCEL;
+const sessionsDir = isVercel ? '/tmp/sessions' : path.resolve(__dirname, '../data/sessions');
 if (!fs.existsSync(sessionsDir)) {
   fs.mkdirSync(sessionsDir, { recursive: true });
 }
@@ -170,17 +171,21 @@ app.get('*', (req, res, next) => {
 // Global Error Handler
 app.use(globalErrorHandler);
 
-// Start Server
-async function startServer() {
-  await initDatabase();
-  app.listen(env.PORT, () => {
-    console.log(`=======================================================`);
-    console.log(`Private Cloud File Manager Server running on port ${env.PORT}`);
-    console.log(`Mode: ${env.APP_ENV}`);
-    console.log(`=======================================================`);
+// Start Server (Skip when running in Vercel Serverless environment)
+if (!process.env.VERCEL) {
+  async function startServer() {
+    await initDatabase();
+    app.listen(env.PORT, () => {
+      console.log(`=======================================================`);
+      console.log(`Private Cloud File Manager Server running on port ${env.PORT}`);
+      console.log(`Mode: ${env.APP_ENV}`);
+      console.log(`=======================================================`);
+    });
+  }
+
+  startServer().catch((err) => {
+    console.error('Failed to start server:', err);
   });
 }
 
-startServer().catch((err) => {
-  console.error('Failed to start server:', err);
-});
+export default app;

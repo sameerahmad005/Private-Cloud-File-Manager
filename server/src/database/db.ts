@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 
-const dbDir = path.resolve(__dirname, '../../data');
+const isVercel = !!process.env.VERCEL;
+const dbDir = isVercel ? '/tmp' : path.resolve(__dirname, '../../data');
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
