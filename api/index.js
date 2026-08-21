@@ -1,4 +1,5 @@
-const app = require('../server/dist/index.js').default;
+const serverModule = require('../server/dist/index.js');
+const app = serverModule.default || serverModule;
 const { initDatabase } = require('../server/dist/database/db.js');
 
 let initialized = false;
@@ -10,3 +11,4 @@ module.exports = async (req, res) => {
   }
   return app(req, res);
 };
+

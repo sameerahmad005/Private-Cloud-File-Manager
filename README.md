@@ -255,7 +255,9 @@ Private-Cloud-File-Manager/
 │   ├── package.json
 │   └── tsconfig.json
 ├── shared/                     # Shared TypeScript types & interfaces
-├── app.js                      # Universal cPanel / Phusion Passenger entry script
+├── api/                        # Vercel Serverless Function entry point (index.js)
+├── app.js                      # Universal cPanel / Node.js entry script
+├── vercel.json                 # Vercel deployment & SPA routing configuration
 ├── .env.example                # Template environment file
 ├── package.json                # Root package configuration
 └── README.md
@@ -289,6 +291,13 @@ npm run build
 ---
 
 ## Production Deployment
+
+### Vercel Serverless Deployment
+1. Import the repository into **Vercel**.
+2. Keep the **Root Directory** as `./` (repository root).
+3. Vercel will automatically detect `vercel.json` (build command `npm run build`, output directory `client/dist`, and API/SPA rewrites).
+4. Configure required Environment Variables in Vercel Project Settings (`APP_URL`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`, `GOOGLE_DRIVE_ROOT_FOLDER_ID`).
+5. Add `https://<your-vercel-domain>/api/setup/oauth/callback` to **Authorized redirect URIs** in Google Cloud Console.
 
 ### Standard Node.js Server
 1. Clone repository and run `npm install`.

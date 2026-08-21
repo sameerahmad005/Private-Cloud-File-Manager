@@ -1,11 +1,18 @@
-// app.js - Universal cPanel Entry Point for Phusion Passenger
+// app.js - Universal Entry Point
 const fs = require('fs');
 const path = require('path');
 
-if (fs.existsSync(path.join(__dirname, 'server/dist/index.js'))) {
-  require('./server/dist/index.js');
-} else if (fs.existsSync(path.join(__dirname, 'dist/index.js'))) {
-  require('./dist/index.js');
+let serverApp;
+const serverDistPath = path.join(__dirname, 'server/dist/index.js');
+const rootDistPath = path.join(__dirname, 'dist/index.js');
+
+if (fs.existsSync(serverDistPath)) {
+  serverApp = require(serverDistPath);
+} else if (fs.existsSync(rootDistPath)) {
+  serverApp = require(rootDistPath);
 } else {
   console.error('Error: Could not locate server/dist/index.js or dist/index.js');
 }
+
+module.exports = serverApp && serverApp.default ? serverApp.default : serverApp;
+

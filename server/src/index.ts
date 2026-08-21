@@ -145,11 +145,13 @@ app.get('/api/audit-logs', metadataController.getAuditLogs);
 const possibleClientPaths = [
   path.resolve(__dirname, '../../client/dist'),
   path.resolve(__dirname, '../client/dist'),
+  path.resolve(__dirname, '../../../client/dist'),
+  path.resolve(__dirname, 'client/dist'),
   path.resolve(process.cwd(), 'client/dist'),
   path.resolve(process.cwd(), 'dist'),
 ];
 
-const clientBuildPath = possibleClientPaths.find((p) => fs.existsSync(p)) || possibleClientPaths[0];
+const clientBuildPath = possibleClientPaths.find((p) => fs.existsSync(path.join(p, 'index.html'))) || possibleClientPaths[0];
 app.use(express.static(clientBuildPath));
 
 // Server-side redirect for /setup and /setup/* routes once installation is initialized
@@ -161,11 +163,21 @@ app.get(['/setup', '/setup/*'], (req, res, next) => {
   next();
 });
 
+// Explicit 404 for unhandled API requests (prevents leaking to SPA fallback)
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ success: false, error: 'API endpoint not found' });
+});
+
+// SPA Fallback for all other non-API GET requests
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(clientBuildPath, 'index.html'), (err) => {
-    if (err) next();
-  });
+  const indexPath = path.join(clientBuildPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath, (err) => {
+      if (err && !res.headersSent) next(err);
+    });
+  }
+  next();
 });
 
 // Global Error Handler
