@@ -17,19 +17,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authenticated, setAuthenticated] = useState<boolean>(false);
-  const [isInitialized, setIsInitialized] = useState<boolean>(true);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   const checkSession = async () => {
     try {
       setLoading(true);
       const setupRes = await setupApi.getStatus();
-      if (setupRes.success && setupRes.data) {
+      if (setupRes && setupRes.success && setupRes.data) {
         setIsInitialized(setupRes.data.initialized);
+      } else {
+        setIsInitialized(false);
       }
 
       const res = await authApi.getSession();
-      if (res.authenticated && res.user) {
+      if (res && res.authenticated && res.user) {
         setUser(res.user);
         setAuthenticated(true);
       } else {
@@ -37,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthenticated(false);
       }
     } catch {
+      setIsInitialized(false);
       setUser(null);
       setAuthenticated(false);
     } finally {
