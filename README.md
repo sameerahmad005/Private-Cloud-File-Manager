@@ -15,11 +15,9 @@ A self-hosted web application for managing files and folders stored in Google Dr
 ## Preview
 
 <p align="center">
-  <a href="https://res.cloudinary.com/dobinvf7x/image/upload/demo.png">
-    <img src="https://res.cloudinary.com/dobinvf7x/image/upload/demo.png"
-         alt="Private Cloud File Manager Preview"
-         width="40%">
-  </a>
+  <img src="https://res.cloudinary.com/dobinvf7x/image/upload/demo.png"
+       alt="Private Cloud File Manager Preview"
+       width="60%">
 </p>
 
 ---
