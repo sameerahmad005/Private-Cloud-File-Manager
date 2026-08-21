@@ -38,10 +38,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS
+// CORS (Supports dynamic request origins for seamless Vercel / Cloudflare / Localhost usage)
 app.use(
   cors({
-    origin: env.APP_URL || 'http://localhost:5000',
+    origin: (requestOrigin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!requestOrigin) return callback(null, true);
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
