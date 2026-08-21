@@ -353,6 +353,6 @@ License information will be added separately.
 
 ## Author & Attribution
 
-Made by **Sameer**
+Made by **Sameer Ahmad**
 
 GitHub: [https://github.com/sameerahmad005/Private-Cloud-File-Manager](https://github.com/sameerahmad005/Private-Cloud-File-Manager)
